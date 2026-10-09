@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shadow generator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px system-ui, sans-serif; display: flex; height: 100dvh; }
+    #stage { flex: 1; display: grid; place-items: center; background: #f4f3f6; transition: background .2s; }
+    #stage.dark { background: #16171d; }
+    #card { width: 260px; height: 180px; background: white; }
+    #panel { width: 340px; overflow-y: auto; padding: 16px; border-left: 1px solid #ddd; background: white; }
+    .layer { border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+    .row { display: grid; grid-template-columns: 56px 1fr 40px; align-items: center; gap: 8px; margin: 4px 0; }
+    .row span:last-child { text-align: right; color: #666; }
+    h3 { margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    pre { background: #f4f3f6; padding: 10px; border-radius: 8px; white-space: pre-wrap; margin: 8px 0; font-size: 12px; }
+    button { font: inherit; padding: 4px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="stage"><div id="card"></div></div>
+  <aside id="panel">
+    <div id="global"></div>
+    <div id="layers"></div>
+    <button id="add">+ Add layer</button>
+    <pre id="out"></pre>
+    <button id="copy">Copy CSS</button>
+    <button id="copyReact">Copy React style</button>
+  </aside>
+
+  <script>
+    // Starts as a soft two-layer shadow; every value is a live control.
+    const layers = [
+      { x: 0, y: 1, blur: 3, spread: 0, color: '#000000', alpha: 0.06, inset: false },
+      { x: 0, y: 14, blur: 44, spread: -10, color: '#6c47ff', alpha: 0.14, inset: false },
+    ]
+    const g = { tl: 16, tr: 16, br: 16, bl: 16, linked: true, dark: false }
+    // Border: width per side (top, right, bottom, left), style, colour and opacity.
+    const b = { t: 1, r: 1, b: 1, l: 1, linked: true, style: 'solid', color: '#e5e4e7', alpha: 1 }
+    const $ = (id) => document.getElementById(id)
+
+    const rgba = (hex, a) => {
+      const n = parseInt(hex.slice(1), 16)
+      return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
+    }
+    const shadow = () =>
+      layers.map((l) => `${l.inset ? 'inset ' : ''}${l.x}px ${l.y}px ${l.blur}px ${l.spread}px ${rgba(l.color, l.alpha)}`).join(', ')
+
+    // top-left, top-right, bottom-right, bottom-left (CSS order). Collapses to one value when all match.
+    const radius = () => {
+      const all = [g.tl, g.tr, g.br, g.bl]
+      return (all.every((v) => v === all[0]) ? [all[0]] : all).map((v) => v + 'px').join(' ')
+    }
+
+    const borderWidth = () => {
+      const all = [b.t, b.r, b.b, b.l]
+      return (all.every((v) => v === all[0]) ? [all[0]] : all).map((v) => v + 'px').join(' ')
+    }
+    const borderColor = () => rgba(b.color, b.alpha)
+
+    function update() {
+      $('card').style.boxShadow = shadow()
+      $('card').style.borderRadius = radius()
+      $('card').style.borderWidth = borderWidth()
+      $('card').style.borderStyle = b.style
+      $('card').style.borderColor = borderColor()
+      $('out').textContent =
+        `box-shadow: ${shadow()};\nborder-radius: ${radius()};\n` +
+        `border-width: ${borderWidth()};\nborder-style: ${b.style};\nborder-color: ${borderColor()};`
+    }
+
+    function slider(obj, key, label, min, max, step, after) {
+      const row = document.createElement('label')
+      row.className = 'row'
+      row.innerHTML = `<span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${obj[key]}"><span>${obj[key]}</span>`
+      const input = row.querySelector('input')
+      const out = row.lastElementChild
+      input.oninput = () => { obj[key] = +input.value; out.textContent = input.value; if (after) after(); update() }
+      return row
+    }
+
+    // Four sliders in one box. While "link" is on, moving one moves all four.
+    function linkedControls(title, obj, keys, max, linkLabel) {
+      const box = document.createElement('div')
+      box.className = 'layer'
+      box.innerHTML = `<h3>${title}</h3>`
+      const rows = {}
+      for (const [k, label] of keys) {
+        rows[k] = slider(obj, k, label, 0, max, 1, () => {
+          if (!obj.linked) return
+          for (const [o] of keys) {
+            obj[o] = obj[k]
+            rows[o].querySelector('input').value = obj[k]
+            rows[o].lastElementChild.textContent = obj[k]
+          }
+        })
+        box.append(rows[k])
+      }
+      const link = document.createElement('label')
+      link.innerHTML = `<input type="checkbox"> ${linkLabel}`
+      link.querySelector('input').checked = obj.linked
+      link.querySelector('input').onchange = (e) => { obj.linked = e.target.checked }
+      box.append(link)
+      return box
+    }
+
+    function borderControls() {
+      const box = linkedControls('Border', b, [['t', 'Top'], ['r', 'Right'], ['b', 'Bottom'], ['l', 'Left']], 16, 'Link sides')
+      const style = document.createElement('div')
+      style.innerHTML =
+        '<select>' + ['solid', 'dashed', 'dotted', 'double', 'none'].map((s) => `<option${s === b.style ? ' selected' : ''}>${s}</option>`).join('') + '</select>' +
+        ` <input type="color" value="${b.color}">`
+      style.querySelector('select').onchange = (e) => { b.style = e.target.value; update() }
+      style.querySelector('input').oninput = (e) => { b.color = e.target.value; update() }
+      box.append(style, slider(b, 'alpha', 'Opacity', 0, 1, 0.01))
+      return box
+    }
+
+    function build() {
+      $('global').replaceChildren(
+        linkedControls('Border radius', g, [['tl', 'TL'], ['tr', 'TR'], ['br', 'BR'], ['bl', 'BL']], 80, 'Link corners'),
+        borderControls(),
+      )
+      const dark = document.createElement('label')
+      dark.innerHTML = '<input type="checkbox"> Dark page background'
+      dark.querySelector('input').checked = g.dark
+      dark.querySelector('input').onchange = (e) => { g.dark = e.target.checked; $('stage').classList.toggle('dark', g.dark) }
+      $('global').append(dark)
+
+      $('layers').replaceChildren(...layers.map((l, i) => {
+        const box = document.createElement('div')
+        box.className = 'layer'
+        box.innerHTML = `<h3>Layer ${i + 1} <button>Remove</button></h3>`
+        box.querySelector('button').onclick = () => { if (layers.length > 1) { layers.splice(i, 1); build(); update() } }
+        box.append(
+          slider(l, 'x', 'X', -60, 60, 1),
+          slider(l, 'y', 'Y', -60, 60, 1),
+          slider(l, 'blur', 'Blur', 0, 120, 1),
+          slider(l, 'spread', 'Spread', -60, 60, 1),
+          slider(l, 'alpha', 'Opacity', 0, 1, 0.01),
+        )
+        const extra = document.createElement('div')
+        extra.innerHTML = `<input type="color" value="${l.color}"> <label><input type="checkbox" ${l.inset ? 'checked' : ''}> inset</label>`
+        extra.querySelector('input[type=color]').oninput = (e) => { l.color = e.target.value; update() }
+        extra.querySelector('input[type=checkbox]').onchange = (e) => { l.inset = e.target.checked; update() }
+        box.append(extra)
+        return box
+      }))
+    }
+
+    $('add').onclick = () => {
+      if (layers.length < 4) { layers.push({ x: 0, y: 4, blur: 12, spread: 0, color: '#000000', alpha: 0.1, inset: false }); build(); update() }
+    }
+    const copy = (text, btn) => navigator.clipboard.writeText(text).then(() => { const t = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => (btn.textContent = t), 1000) })
+    $('copy').onclick = (e) => copy($('out').textContent, e.target)
+    $('copyReact').onclick = (e) => copy(
+      `boxShadow: '${shadow()}',\nborderRadius: '${radius()}',\nborderWidth: '${borderWidth()}',\nborderStyle: '${b.style}',\nborderColor: '${borderColor()}',`,
+      e.target,
+    )
+
+    build()
+    update()
+  </script>
+</body>
+</html>
