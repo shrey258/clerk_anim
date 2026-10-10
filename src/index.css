@@ -16,3 +16,8 @@
 @media (min-width: 1280px) {
   .peephole { width: min(1200px, 100% - 48px); height: 697.5px; --scale: 1; }
 }
+
+/* Every machine loops forever; stop them for people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .peephole * { animation: none !important; transition: none !important; }
+}
