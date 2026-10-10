@@ -1,22 +1,47 @@
-const GAP = 16 // px between neighbouring cards
+const GAP = 16 
 
-// Each box is a slot, in % of the canvas. The slots touch each other with no space between.
+
 const slots = [
-  // main card: centred in the peephole (30 + 40/2 = 50, 25.5 + 49/2 = 50)
-  { left: 30, top: 25.5, w: 40, h: 49 },
-  // left strip
-  { left: 10, top: 10, w: 20, h: 30 },
-  { left: 10, top: 40, w: 20, h: 22 },
-  { left: 10, top: 62, w: 20, h: 28 },
-  // right strip
-  { left: 70, top: 10, w: 20, h: 38 },
-  { left: 70, top: 48, w: 20, h: 42 },
-  // above the main card
-  { left: 30, top: 10, w: 17, h: 15.5 },
-  { left: 47, top: 10, w: 23, h: 15.5 },
-  // below the main card
-  { left: 30, top: 74.5, w: 25, h: 15.5 },
-  { left: 55, top: 74.5, w: 15, h: 15.5 },
+  // main card: centred
+  { left: 37, top: 34, w: 26, h: 32 },
+
+  { left: 0, top: 0, w: 12, h: 20 },
+  { left: 0, top: 20, w: 12, h: 25 },
+  { left: 0, top: 45, w: 12, h: 17 },
+  { left: 0, top: 62, w: 12, h: 20 },
+  { left: 0, top: 82, w: 12, h: 18 },
+  { left: 12, top: 0, w: 13, h: 14 },
+  { left: 12, top: 14, w: 13, h: 24 },
+  { left: 12, top: 38, w: 13, h: 20 },
+  { left: 12, top: 58, w: 13, h: 22 },
+  { left: 12, top: 80, w: 13, h: 20 },
+  { left: 25, top: 0, w: 12, h: 18 },
+  { left: 25, top: 18, w: 12, h: 16 },
+  { left: 25, top: 34, w: 12, h: 32 },
+  { left: 25, top: 66, w: 12, h: 18 },
+  { left: 25, top: 84, w: 12, h: 16 },
+  { left: 63, top: 0, w: 12, h: 16 },
+  { left: 63, top: 16, w: 12, h: 18 },
+  { left: 63, top: 34, w: 12, h: 32 },
+  { left: 63, top: 66, w: 12, h: 19 },
+  { left: 63, top: 85, w: 12, h: 15 },
+  { left: 75, top: 0, w: 13, h: 24 },
+  { left: 75, top: 24, w: 13, h: 22 },
+  { left: 75, top: 46, w: 13, h: 22 },
+  { left: 75, top: 68, w: 13, h: 32 },
+  { left: 88, top: 0, w: 12, h: 12 },
+  { left: 88, top: 12, w: 12, h: 26 },
+  { left: 88, top: 38, w: 12, h: 22 },
+  { left: 88, top: 60, w: 12, h: 22 },
+  { left: 88, top: 82, w: 12, h: 18 },
+  { left: 37, top: 0, w: 15, h: 16 },
+  { left: 52, top: 0, w: 11, h: 16 },
+  { left: 37, top: 16, w: 10, h: 18 },
+  { left: 47, top: 16, w: 16, h: 18 },
+  { left: 37, top: 66, w: 18, h: 18 },
+  { left: 55, top: 66, w: 8, h: 18 },
+  { left: 37, top: 84, w: 11, h: 16 },
+  { left: 48, top: 84, w: 15, h: 16 },
 ]
 
 // The card sits inside its slot, pulled in by half the gap on every side.
@@ -29,6 +54,11 @@ const cardStyle = {
   border: '1px solid #e5e4e7',
   boxShadow: '0px 1px 3px 0px rgba(0, 0, 0, 0.06), 0px 14px 44px -10px rgba(108, 71, 255, 0.14)',
 } as const
+
+const dimmedStyle = { ...cardStyle, opacity: 0.5, boxShadow: 'none' } as const
+
+
+const FOCUSED = 0
 
 function App() {
   return <>
@@ -76,7 +106,7 @@ function App() {
               height: `${s.h}%`,
             }}
           >
-            <div style={cardStyle} />
+            <div style={i === FOCUSED ? cardStyle : dimmedStyle} />
           </div>
         ))}
       </div>
