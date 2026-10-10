@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* The hero frame, at clerk.com's sizes per breakpoint (fixed px, so it looks the same on any screen in that range).
+   --scale shrinks the cards on smaller screens, as Clerk does. Below 768px Clerk switches to a phone layout we don't have. */
+.peephole {
+  width: calc(100% - 48px);
+  height: 608px;
+  --scale: 0.875;
+}
+@media (min-width: 768px) {
+  .peephole { width: min(704px, 100% - 48px); height: 608px; }
+}
+@media (min-width: 1024px) {
+  .peephole { width: min(960px, 100% - 48px); height: 640px; }
+}
+@media (min-width: 1280px) {
+  .peephole { width: min(1200px, 100% - 48px); height: 697.5px; --scale: 1; }
+}
