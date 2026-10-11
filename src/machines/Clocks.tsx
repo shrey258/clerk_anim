@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ACCENT, INK, LINE, MUTED } from './theme'
 
-// 352 x 385. Lisbon and Tokyo, live. A clock's face goes dark when it's night there.
-
 function timeIn(timeZone: string, now: Date) {
   const parts = new Intl.DateTimeFormat('en-GB', { timeZone, hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' }).formatToParts(now)
   const get = (type: string) => Number(parts.find(p => p.type === type)?.value)

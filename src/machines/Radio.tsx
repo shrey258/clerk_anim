@@ -1,8 +1,6 @@
 import { useRef, useState } from 'react'
 import { ACCENT, INK, LINE, MUTED } from './theme'
 
-// The main card: an FM radio. Drag the dial, use the arrow keys, or tap a preset.
-
 const STATIONS = [
   { freq: 89.4, name: 'Radio Nova', show: 'City pop hour', short: 'Nova' },
   { freq: 93.2, name: 'Rain FM', show: 'Tokyo, light rain', short: 'Rain' },
@@ -11,8 +9,8 @@ const STATIONS = [
 ]
 const LO = 88
 const HI = 108
-const PX = 26 // dial pixels per MHz
-const NEEDLE = 164 // needle x inside the dial
+const PX = 26
+const NEEDLE = 164
 
 const css = `
 @keyframes radio-bar { 0%, 100% { transform: scaleY(0.25) } 50% { transform: scaleY(1) } }
@@ -32,7 +30,6 @@ export function Radio() {
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: 16, color: INK }}>
       <style>{css}</style>
 
-      {/* Speaker: a dot grille that pulses while a station plays */}
       <div style={{
         position: 'relative', height: 196, borderRadius: 12, overflow: 'hidden', display: 'grid', placeItems: 'center',
         backgroundColor: '#f6f5f8', backgroundImage: 'radial-gradient(circle, #d6d3dd 1.6px, transparent 2px)', backgroundSize: '10px 10px',
@@ -46,7 +43,6 @@ export function Radio() {
         <span style={{ position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: 4, background: station ? ACCENT : '#cfcdd4', boxShadow: station ? `0 0 8px ${ACCENT}` : 'none' }} />
       </div>
 
-      {/* Display */}
       <div style={{ padding: '18px 8px 0' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontSize: 54, fontWeight: 650, letterSpacing: '-0.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{freq.toFixed(1)}</span>
@@ -67,7 +63,6 @@ export function Radio() {
         </div>
       </div>
 
-      {/* Presets */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 'auto' }}>
         {STATIONS.map(s => {
           const on = s === station
@@ -83,7 +78,6 @@ export function Radio() {
         })}
       </div>
 
-      {/* Dial: the scale slides under a fixed needle */}
       <div
         role="slider" tabIndex={0} aria-label="Tuning" aria-valuemin={LO} aria-valuemax={HI} aria-valuenow={freq}
         aria-valuetext={`${freq.toFixed(1)} FM${station ? `, ${station.name}` : ''}`}
@@ -97,7 +91,7 @@ export function Radio() {
         }}
         style={{
           position: 'relative', height: 78, marginTop: 8, borderRadius: 12, background: '#f6f5f8', overflow: 'hidden',
-          cursor: dragging ? 'grabbing' : 'grab', touchAction: 'none',
+          cursor: dragging ? 'grabbing' : 'grab', touchAction: 'none', userSelect: 'none',
           maskImage: 'linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent)',
         }}
       >

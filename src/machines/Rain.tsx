@@ -1,18 +1,31 @@
 import { ACCENT, INK, MUTED } from './theme'
 
-// 720 x 506. Rain over a Tokyo street at night-ish. Only the bottom-left ~400 x 280 is in the frame.
+const RAIN = [
+  [173, 211, 22, 0.42],
+  [229, 263, 18, 0.62],
+  [281, 307, 14, 0.85],
+]
+
+const DROPS_PER_TILE = 7
+
+const drops = (w: number, h: number, len: number) => {
+  const lines = Array.from({ length: DROPS_PER_TILE }, (_, i) => {
+    const x = Math.round(((i * 0.618 + w / 1000) % 1) * w)
+    const y = Math.round(((i * 0.382 + h / 997) % 1) * (h - len))
+    return `%3Cline x1='${x}' y1='${y}' x2='${x}' y2='${y + len}' stroke='%23a9a6b2'/%3E`
+  }).join('')
+  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'%3E${lines}%3C/svg%3E")`
+}
 
 const css = `
-@keyframes rain-fall { from { transform: translateY(0) } to { transform: translateY(300px) } }
+${RAIN.map(([, h]) => `@keyframes rain-fall-${h} { to { transform: translateY(${h}px) } }`).join('\n')}
 @keyframes rain-ripple { from { transform: scale(0.2); opacity: 1 } to { transform: scale(1.6); opacity: 0 } }
 @keyframes rain-flicker { 0%, 100% { opacity: 1 } 50% { opacity: 0.35 } }
 `
 
-// [x, width, height] of each building, left to right.
-const BUILDINGS = [[0, 54, 120], [58, 40, 86], [102, 70, 150], [176, 46, 104], [226, 62, 132], [292, 38, 72], [334, 76, 164], [414, 50, 96]]
+const BUILDINGS = [[0, 54, 120], [58, 40, 86], [102, 70, 150], [176, 46, 104], [226, 62, 132], [292, 38, 72], [334, 76, 164], [414, 50, 96], [468, 64, 140], [536, 44, 90], [584, 70, 176], [658, 62, 118]]
 const GROUND = 470
 
-// Same "random" every render, so the picture never jumps.
 const pick = (n: number) => {
   const x = Math.sin(n * 127.1) * 43758.5453
   return x - Math.floor(x)
@@ -23,7 +36,7 @@ export function Rain() {
     <div style={{ position: 'absolute', inset: 0 }}>
       <style>{css}</style>
 
-      <div style={{ position: 'absolute', left: 24, top: 248 }}>
+      <div style={{ position: 'absolute', left: 24, top: 22 }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: INK }}>Tokyo · 17°</div>
         <div style={{ fontSize: 12.5, color: MUTED, marginTop: 3 }}>Light rain until 14:00</div>
       </div>
@@ -45,19 +58,19 @@ export function Rain() {
       ))}
       <div style={{ position: 'absolute', left: 0, right: 0, top: GROUND, borderTop: '1.5px solid #cfcdd4' }} />
 
-      {/* Slanted rain in front of the buildings */}
-      <div style={{ position: 'absolute', left: -40, top: 170, width: 520, height: 300, overflow: 'hidden', transform: 'skewX(-10deg)' }}>
-        {Array.from({ length: 56 }, (_, i) => (
-          <span key={i} style={{
-            position: 'absolute', left: Math.round(pick(i) * 520), top: -30, width: 1, height: 14 + pick(i + 99) * 14, background: '#a9a6b2',
-            animation: `rain-fall ${0.55 + pick(i + 7) * 0.35}s linear ${-pick(i + 3)}s infinite`,
+      <div style={{ position: 'absolute', left: -60, top: 0, width: 840, height: GROUND, overflow: 'hidden', transform: 'skewX(-10deg)' }}>
+        {RAIN.map(([w, h, len, seconds]) => (
+          <div key={w} style={{
+            position: 'absolute', left: 0, right: 0, top: -h, bottom: 0,
+            backgroundImage: drops(w, h, len), backgroundSize: `${w}px ${h}px`,
+            animation: `rain-fall-${h} ${seconds}s linear infinite`,
           }} />
         ))}
       </div>
 
-      {Array.from({ length: 8 }, (_, i) => (
+      {Array.from({ length: 14 }, (_, i) => (
         <span key={i} style={{
-          position: 'absolute', left: 20 + pick(i + 50) * 380, top: GROUND + 6 + pick(i + 60) * 22, width: 36, height: 8, marginLeft: -18,
+          position: 'absolute', left: 20 + pick(i + 50) * 680, top: GROUND + 6 + pick(i + 60) * 22, width: 36, height: 8, marginLeft: -18,
           borderRadius: '50%', border: '1px solid #bdbac4', animation: `rain-ripple 1.6s ease-out ${-pick(i + 70) * 1.6}s infinite`,
         }} />
       ))}
