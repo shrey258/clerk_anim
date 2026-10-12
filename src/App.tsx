@@ -1,5 +1,6 @@
 import { memo, useState, type ComponentType } from 'react'
 import { Dock } from './Dock'
+import { HireMe } from './HireMe'
 import layout from './layout.json'
 import { Clocks } from './machines/Clocks'
 import { Radio } from './machines/Radio'
@@ -101,9 +102,7 @@ function App() {
         <Peephole />
       </section>
 
-      <section id="app2" className="h-dvh w-full">
-        <div className="flex items-center justify-center h-full w-full bg-linear-to-tr from-red-500 to-blue-500" />
-      </section>
+      <HireMe />
     </>
   )
 }
